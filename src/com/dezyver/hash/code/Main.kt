@@ -1,7 +1,6 @@
 package com.dezyver.hash.code
 
 import java.io.File
-import java.lang.NullPointerException
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
@@ -14,7 +13,7 @@ const val elaborate = "input/e_elaborate.in.txt"
 
 data class Wish(val likes: Set<String>, val dislikes: Set<String>)
 
-class Input(val list: List<Wish>) : Iterable<Wish>{
+class Input(val list: List<Wish>, val ingridients: Set<String>) : Iterable<Wish>{
     override fun iterator(): Iterator<Wish> {
         return list.iterator()
     }
@@ -25,7 +24,13 @@ typealias Solution = Set<String>
 class EstimatedSolution(val score: Int, val solution: Solution)
 
 fun main() {
-    val input = Input(parseInput(File(difficult)))
+    val inputList = parseInput(File(difficult))
+    val ingidients = HashSet<String>()
+    for (wish in inputList) {
+        ingidients.addAll(wish.likes)
+        ingidients.addAll(wish.dislikes)
+    }
+    val input = Input(inputList, ingidients)
 
     var generation = makeInitialGeneration(input)
 
@@ -72,10 +77,16 @@ fun mutate (input: Input, solutions: List<EstimatedSolution>): List<Solution> {
     val mutations = LinkedList<Solution>()
     for (solution: EstimatedSolution in solutions) {
         repeat(10) {
-            val temp = solution
+            val temp = solution.solution.toMutableSet()
+            if (Random.nextBoolean()){
+                temp.remove(temp.random())
+            } else {
+                temp.add(input.ingridients.random())
+            }
+            mutations.add(temp)
         }
     }
-    return solutions.map { it.solution }
+    return mutations
 }
 
 fun groupWishes(wishes: List<Wish>): List<Wish> {

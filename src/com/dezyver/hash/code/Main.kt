@@ -1,9 +1,8 @@
-package com.izyver.hashcode
+package com.dezyver.hash.code
 
 import java.io.File
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
-import kotlin.system.measureTimeMillis
 
 const val basic = "input/b_basic.in.txt"
 const val coarse = "input/c_coarse.in.txt"

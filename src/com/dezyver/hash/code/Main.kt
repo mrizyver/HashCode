@@ -42,7 +42,7 @@ fun main() {
         val selected = selection(estimated)
 
         // 4 run mutation
-        generation = mutate(selected)
+        generation = mutate(input, selected)
     }
 }
 
@@ -60,11 +60,22 @@ fun makeInitialGeneration (input: Input): List<Solution> {
 }
 
 fun selection (solutions: List<EstimatedSolution>): List<EstimatedSolution> {
-    return listOf()
+    val bestScore = solutions.maxOf { it.score }
+    val worstScore = solutions.minOf { it.score }
+    return solutions.filter {
+        val probability = (it.score.toFloat() - worstScore) / (bestScore.toFloat() - worstScore) + 0.1f
+        Random.nextFloat() < probability
+    }
 }
 
-fun mutate (solutions: List<EstimatedSolution>): List<Solution> {
-    return listOf()
+fun mutate (input: Input, solutions: List<EstimatedSolution>): List<Solution> {
+    val mutations = LinkedList<Solution>()
+    for (solution: EstimatedSolution in solutions) {
+        repeat(10) {
+            val temp = solution
+        }
+    }
+    return solutions.map { it.solution }
 }
 
 fun groupWishes(wishes: List<Wish>): List<Wish> {

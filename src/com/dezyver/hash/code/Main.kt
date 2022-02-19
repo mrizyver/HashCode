@@ -25,14 +25,14 @@ class EstimatedSolution(val score: Int, val solution: Solution)
 
 fun main() {
     val inputList = parseInput(File(difficult))
-    val ingidients = HashSet<String>()
+    val ingredients = HashSet<String>()
     for (wish in inputList) {
-        ingidients.addAll(wish.likes)
-        ingidients.addAll(wish.dislikes)
+        ingredients.addAll(wish.likes)
+        ingredients.addAll(wish.dislikes)
     }
-    val input = Input(inputList, ingidients)
+    val input = Input(inputList, ingredients)
 
-    var generation = makeInitialGeneration(input)
+    var generation: List<Solution> = groupWishes(inputList).map { it.likes }
 
     repeat (1000) {
         // 1 estimate current generation
@@ -41,7 +41,7 @@ fun main() {
         // 2 find the best solution, log generation number, max score of this generation
         val best: EstimatedSolution = estimated.maxByOrNull { it.score } ?: return@repeat
 
-        println("Generation $it, max score ${best.score}")
+        println("Generation $it, max score ${best.score}, ingrs ${best.solution.size}, generation size ${generation.size}")
 
         // 3 run selection
         val selected = selection(estimated)
@@ -74,9 +74,10 @@ fun selection (solutions: List<EstimatedSolution>): List<EstimatedSolution> {
 }
 
 fun mutate (input: Input, solutions: List<EstimatedSolution>): List<Solution> {
+    val times = if (solutions.size > 100) 1 else 2
     val mutations = LinkedList<Solution>()
     for (solution: EstimatedSolution in solutions) {
-        repeat(10) {
+        repeat(times) {
             val temp = solution.solution.toMutableSet()
             if (Random.nextBoolean()){
                 temp.remove(temp.random())

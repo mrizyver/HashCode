@@ -42,14 +42,7 @@ fun main() {
             while (true) {
                 // 1 estimate current generation
                 val generation: List<Solution> = generations.take()
-                estimates.offer(generation.map { s ->
-                    EstimatedSolution(
-                        calculateScore(
-                            input.list,
-                            s
-                        ), s
-                    )
-                })
+                estimates.offer(generation.map { s -> EstimatedSolution(calculateScore(input.list, s), s) })
             }
         }
     }

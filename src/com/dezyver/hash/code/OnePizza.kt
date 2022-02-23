@@ -2,9 +2,10 @@ package com.dezyver.hash.code
 
 import java.io.File
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
+import java.util.concurrent.ArrayBlockingQueue
+import kotlin.concurrent.thread
 import kotlin.random.Random
+import kotlin.system.measureTimeMillis
 
 const val basic = "input/b_basic.in.txt"
 const val coarse = "input/c_coarse.in.txt"
@@ -31,26 +32,36 @@ fun main() {
         ingredients.addAll(wish.dislikes)
     }
     val input = Input(inputList, ingredients)
-
-//    val sol = HashSet<String>()
-//    sol.add(ingredients.first())
-    val sol = bogdan(input.list)
-    var generation: List<Solution> = listOf(sol)
+    val availableProcessors = Runtime.getRuntime().availableProcessors()
+    val generations = ArrayBlockingQueue<List<Solution>>(availableProcessors * 2, false)
+    generations.offer(groupWishes(inputList).map { it.likes })
+    val estimates = ArrayBlockingQueue<List<EstimatedSolution>>(availableProcessors * 2, false)
     var gen = 0
-    while (true) {
-        // 1 estimate current generation
-        val estimated: List<EstimatedSolution> = generation.map { s -> EstimatedSolution(calculateScore(input.list, s), s) }
 
+    repeat(availableProcessors - 1){
+        thread {
+            while (true) {
+                // 1 estimate current generation
+                val generation: List<Solution> = generations.take()
+                estimates.offer(generation.map { s -> EstimatedSolution(calculateScore(input.list, s), s) })
+            }
+        }
+    }
+    while (true) {
+        val estimated = estimates.take()
         // 2 find the best solution, log generation number, max score of this generation
         val best: EstimatedSolution = estimated.maxByOrNull { it.score } ?: continue
 
-        println("Generation ${gen++}, max score ${best.score}, ingrs ${best.solution.size}, generation size ${generation.size}")
+        println("Generation ${gen++}, max score ${best.score}, ingrs ${best.solution.size}, generations ${generations.size}, estimates ${estimates.size}")
 
         // 3 run selection
         val selected = selection(estimated)
 
         // 4 run mutation
-        generation = mutate(input, selected)
+        val times = if (generations.size < availableProcessors) 2 else 1
+        repeat(times) {
+            generations.offer(mutate(input, selected))
+        }
     }
 }
 

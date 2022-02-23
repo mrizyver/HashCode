@@ -25,7 +25,7 @@ typealias Solution = Set<String>
 class EstimatedSolution(val score: Int, val solution: Solution)
 
 fun main() {
-    val inputList = parseInput(File(difficult))
+    val inputList = parseInput(File(elaborate))
     val ingredients = HashSet<String>()
     for (wish in inputList) {
         ingredients.addAll(wish.likes)
@@ -34,10 +34,10 @@ fun main() {
     val input = Input(inputList, ingredients)
     val availableProcessors = Runtime.getRuntime().availableProcessors()
     val generations = ArrayBlockingQueue<List<Solution>>(availableProcessors * 2, false)
-    generations.offer(groupWishes(inputList).map { it.likes })
+    generations.offer(listOf(bogdan(inputList)))
     val estimates = ArrayBlockingQueue<List<EstimatedSolution>>(availableProcessors * 2, false)
     var gen = 0
-
+    var totalBest: EstimatedSolution? = null
     repeat(availableProcessors - 1){
         thread {
             while (true) {
@@ -51,12 +51,12 @@ fun main() {
         val estimated = estimates.take()
         // 2 find the best solution, log generation number, max score of this generation
         val best: EstimatedSolution = estimated.maxByOrNull { it.score } ?: continue
-
-        println("Generation ${gen++}, max score ${best.score}, ingrs ${best.solution.size}, generations ${generations.size}, estimates ${estimates.size}")
-
+        if (totalBest?.score ?: 0 < best.score){
+            totalBest = best
+        }
+        println("Generation ${gen++}, max score ${best.score}, ingrs ${best.solution.size}, the best ${totalBest?.score}, generations ${generations.size}, estimates ${estimates.size}")
         // 3 run selection
         val selected = selection(estimated)
-
         // 4 run mutation
         val times = if (generations.size < availableProcessors) 2 else 1
         repeat(times) {

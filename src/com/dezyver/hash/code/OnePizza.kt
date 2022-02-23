@@ -128,19 +128,19 @@ fun calculateScore (wishes: Collection<Wish>, recipe: Set<String>): Int {
 }
 
 fun bogdan(wishes: List<Wish>) {
-    var maxScore = 0;
-    var bestRecipe =  HashSet<String>();
+    var maxScore = 0
+    var bestRecipe =  HashSet<String>()
     fun checkBest (recipe: HashSet<String>) {
         val score = calculateScore(wishes, recipe)
         if (score > maxScore) {
             maxScore = score
-            bestRecipe = recipe;
+            bestRecipe = recipe
         }
     }
     for (wish in wishes) {
         val needToAdd = wish.likes.filter { like -> !bestRecipe.contains(like) }
         val needToRemove = wish.dislikes.filter{like -> bestRecipe.contains(like) }
-        val recipe = HashSet<String>(bestRecipe);
+        val recipe = HashSet<String>(bestRecipe)
         needToAdd.forEach{item -> recipe.add(item)}
         needToRemove.forEach{item -> recipe.remove(item)}
         checkBest(recipe)

@@ -36,15 +36,15 @@ fun main() {
 //    sol.add(ingredients.first())
     val sol = bogdan(input.list)
     var generation: List<Solution> = listOf(sol)
-
-    repeat (10000) {
+    var gen = 0
+    while (true) {
         // 1 estimate current generation
-        val estimated: List<EstimatedSolution> = generation.map { sol -> EstimatedSolution(calculateScore(input.list, sol), sol) }
+        val estimated: List<EstimatedSolution> = generation.map { s -> EstimatedSolution(calculateScore(input.list, s), s) }
 
         // 2 find the best solution, log generation number, max score of this generation
-        val best: EstimatedSolution = estimated.maxByOrNull { it.score } ?: return@repeat
+        val best: EstimatedSolution = estimated.maxByOrNull { it.score } ?: continue
 
-        println("Generation $it, max score ${best.score}, ingrs ${best.solution.size}, generation size ${generation.size}")
+        println("Generation ${gen++}, max score ${best.score}, ingrs ${best.solution.size}, generation size ${generation.size}")
 
         // 3 run selection
         val selected = selection(estimated)
@@ -91,7 +91,7 @@ fun mutate (input: Input, solutions: List<EstimatedSolution>): List<Solution> {
         }
 
         val client = input.list.random()
-        val temp: Solution = solution.solution + client.likes - client.dislikes;
+        val temp: Solution = solution.solution + client.likes - client.dislikes
         mutations.add(temp)
     }
     return mutations
@@ -135,7 +135,7 @@ fun calculateScore (wishes: Collection<Wish>, recipe: Set<String>): Int {
 }
 
 fun bogdan(wishes: List<Wish>): Solution {
-    var maxScore = 0;
+    var maxScore = 0
     var bestRecipe =  HashSet<String>()
 
     fun checkBest (recipe: HashSet<String>) {
@@ -154,5 +154,5 @@ fun bogdan(wishes: List<Wish>): Solution {
         needToRemove.forEach{item -> recipe.remove(item)}
         checkBest(recipe)
     }
-    return bestRecipe;
+    return bestRecipe
 }

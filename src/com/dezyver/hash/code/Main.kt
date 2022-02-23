@@ -21,10 +21,10 @@ class Input(val list: List<Wish>, val ingridients: Set<String>) : Iterable<Wish>
 
 typealias Solution = Set<String>
 
-class EstimatedSolution(val score: Int, val solution: Solution)
+class EstimatedSolution(val score: Int, val solution: Solution, var isBest: Boolean = false)
 
 fun main() {
-    val inputList = parseInput(File(difficult))
+    val inputList = parseInput(File(elaborate))
     val ingredients = HashSet<String>()
     for (wish in inputList) {
         ingredients.addAll(wish.likes)
@@ -37,12 +37,13 @@ fun main() {
     val sol = bogdan(input.list)
     var generation: List<Solution> = listOf(sol)
 
-    repeat (10000) {
+    repeat (100000) {
         // 1 estimate current generation
         val estimated: List<EstimatedSolution> = generation.map { sol -> EstimatedSolution(calculateScore(input.list, sol), sol) }
 
         // 2 find the best solution, log generation number, max score of this generation
         val best: EstimatedSolution = estimated.maxByOrNull { it.score } ?: return@repeat
+        best.isBest = true
 
         println("Generation $it, max score ${best.score}, ingrs ${best.solution.size}, generation size ${generation.size}")
 
@@ -67,10 +68,12 @@ fun makeInitialGeneration (input: Input): List<Solution> {
     return solution
 }
 
+val genSize = 50;
+
 fun selection (solutions: List<EstimatedSolution>): List<EstimatedSolution> {
     val bestScore = solutions.maxOf { it.score }
     val worstScore = solutions.minOf { it.score }
-    if (solutions.size < 100) return solutions
+    if (solutions.size < genSize) return solutions
     return solutions.filter {
         val probability = (it.score.toFloat() - worstScore) / (bestScore.toFloat() - worstScore) + 0.1f
         Random.nextFloat() < probability
@@ -80,7 +83,11 @@ fun selection (solutions: List<EstimatedSolution>): List<EstimatedSolution> {
 fun mutate (input: Input, solutions: List<EstimatedSolution>): List<Solution> {
     val mutations = LinkedList<Solution>()
     for (solution: EstimatedSolution in solutions) {
-        if (solutions.size < 100) {
+        if (solution.isBest) {
+            mutations.add(solution.solution)
+        }
+
+        if (solutions.size < genSize) {
             val temp = solution.solution.toMutableSet()
             if (Random.nextBoolean() && temp.size > 1){
                 temp.remove(temp.random())
@@ -95,23 +102,6 @@ fun mutate (input: Input, solutions: List<EstimatedSolution>): List<Solution> {
         mutations.add(temp)
     }
     return mutations
-}
-
-fun groupWishes(wishes: List<Wish>): List<Wish> {
-    val sortedWishes = wishes.sortedWith { o1, o2 -> (o1.dislikes.size - o1.likes.size) - (o2.dislikes.size - o2.likes.size) }
-    val groupedWishes = ArrayList<Wish>()
-    client@ for (wish in sortedWishes) {
-        group@ for ((index, group) in groupedWishes.withIndex()) {
-            val likesConflict: Boolean = wish.likes.fold(false) { acc, str -> group.dislikes.contains(str) || acc }
-            val dislikesConflict: Boolean = wish.dislikes.fold(false) { acc, str -> group.likes.contains(str) || acc }
-            if (!likesConflict && !dislikesConflict){
-                groupedWishes[index] = Wish(group.likes + wish.likes, group.dislikes + wish.dislikes)
-                continue@client
-            }
-        }
-        groupedWishes.add(wish)
-    }
-    return groupedWishes
 }
 
 fun parseInput(file: File): List<Wish> {

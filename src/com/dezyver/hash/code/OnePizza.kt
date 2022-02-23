@@ -5,7 +5,6 @@ import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import kotlin.concurrent.thread
 import kotlin.random.Random
-import kotlin.system.measureTimeMillis
 
 const val basic = "input/b_basic.in.txt"
 const val coarse = "input/c_coarse.in.txt"
@@ -22,7 +21,7 @@ class Input(val list: List<Wish>, val ingridients: Set<String>) : Iterable<Wish>
 
 typealias Solution = Set<String>
 
-class EstimatedSolution(val score: Int, val solution: Solution)
+class EstimatedSolution(val score: Int, val solution: Solution, var isBest: Boolean = false)
 
 fun main() {
     val inputList = parseInput(File(elaborate))
@@ -53,6 +52,7 @@ fun main() {
         val best: EstimatedSolution = estimated.maxByOrNull { it.score } ?: continue
         if (totalBest?.score ?: 0 < best.score){
             totalBest = best
+            best.isBest = true
         }
         println("Generation ${gen++}, max score ${best.score}, ingrs ${best.solution.size}, the best ${totalBest?.score}, generations ${generations.size}, estimates ${estimates.size}")
         // 3 run selection
@@ -78,10 +78,12 @@ fun makeInitialGeneration (input: Input): List<Solution> {
     return solution
 }
 
+val genSize = 50;
+
 fun selection (solutions: List<EstimatedSolution>): List<EstimatedSolution> {
     val bestScore = solutions.maxOf { it.score }
     val worstScore = solutions.minOf { it.score }
-    if (solutions.size < 100) return solutions
+    if (solutions.size < genSize) return solutions
     return solutions.filter {
         val probability = (it.score.toFloat() - worstScore) / (bestScore.toFloat() - worstScore) + 0.1f
         Random.nextFloat() < probability
@@ -91,7 +93,11 @@ fun selection (solutions: List<EstimatedSolution>): List<EstimatedSolution> {
 fun mutate (input: Input, solutions: List<EstimatedSolution>): List<Solution> {
     val mutations = LinkedList<Solution>()
     for (solution: EstimatedSolution in solutions) {
-        if (solutions.size < 100) {
+        if (solution.isBest) {
+            mutations.add(solution.solution)
+        }
+
+        if (solutions.size < genSize) {
             val temp = solution.solution.toMutableSet()
             if (Random.nextBoolean() && temp.size > 1){
                 temp.remove(temp.random())

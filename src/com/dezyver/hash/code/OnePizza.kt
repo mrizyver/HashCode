@@ -50,6 +50,8 @@ fun main() {
         val estimated = estimates.take()
         // 2 find the best solution, log generation number, max score of this generation
         val best: EstimatedSolution = estimated.maxByOrNull { it.score } ?: continue
+        best.isBest = true
+
         var average: Float? = null
         if (average == null) {
             average = best.score.toFloat()
@@ -59,7 +61,6 @@ fun main() {
         }
         if (totalBest?.score ?: 0 < best.score) {
             totalBest = best
-            best.isBest = true
         }
         println("Generation ${gen++}, max score ${best.score}, best score ${totalBest?.score}, average score $average, ingrs ${best.solution.size}, generations ${generations.size}, estimates ${estimates.size}")
         // 3 run selection
@@ -85,7 +86,11 @@ fun makeInitialGeneration(input: Input): List<Solution> {
     return solution
 }
 
+<<<<<<< Updated upstream
 val genSize = 50
+=======
+val genSize = 10;
+>>>>>>> Stashed changes
 
 fun selection(solutions: List<EstimatedSolution>): List<EstimatedSolution> {
     val bestScore = solutions.maxOf { it.score }
